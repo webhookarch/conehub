@@ -1,1 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Docs - Document View</title> <style>
+        /* Transparent Amber / Cafe Glass System */
+        :root {
+            --amber-solid: #f59e0b;
+            --amber-glow: rgba(245, 158, 11, 0.35);
+            --text-main: #fef3c7;
+            --text-muted: #d97706;
+            --glass-bg: rgba(26, 15, 6, 0.75);
+            --glass-card: rgba(43, 25, 11, 0.65);
+            --glass-border: rgba(245, 158, 11, 0.25);
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Monaco', 'Inter', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: url('https://raw.githubusercontent.com/webhookarch/conehub/main/yummycafe.webp') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 1200px;
+        }
+
+        /* 3D Parallax Main Wrapper */
+        .parallax-wrapper {
+            width: 96vw;
+            height: 94vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8), 
+                        0 0 30px var(--amber-glow),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            overflow: hidden;
+        }
+
+        /* Nav Bar Construction */
+        .navbar {
+            display: flex;
+            align-items: center;
+            padding: 16px 28px;
+            background: rgba(23, 14, 6, 0.6);
+            border-bottom: 1px solid var(--glass-border);
+            gap: 24px;
+            transform: translateZ(40px);
+        }
+
+        .brand {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .brand span {
+            color: var(--amber-solid);
+            text-shadow: 0 0 10px var(--amber-solid);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            color: var(--text-main);
+            opacity: 0.6;
+            padding: 9px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.15s ease;
+        }
+
+        .tab-btn:hover {
+            opacity: 0.9;
+            border-color: var(--amber-solid);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .tab-btn.active {
+            opacity: 1;
+            color: #ffffff;
+            background: rgba(245, 158, 11, 0.35);
+            border-color: var(--amber-solid);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Main Display Panels */
+        .content-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(20px);
+        }
+
+        .panel {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: none;
+            padding: 35px;
+            overflow-y: auto;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        h3 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .panel-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        /* Movie Search Utility */
+        .search-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .search-input {
+            flex: 1;
+            background: var(--glass-card);
+            border: 1px solid var(--glass-border);
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--amber-solid);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+
+        .search-btn {
+            background: var(--amber-solid);
+            border: none;
+            color: #1c1107;
+            padding: 0 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-btn:hover {
+            background: #fbbf24;
+        }
+
+        /* Grid Framework */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--glass-card);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s;
+            transform-style: preserve-3d;
+        }
+
+        .card:hover {
+            transform: translateZ(20px) scale(1.02);
+            border-color: var(--amber-solid);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            background: rgba(43, 25, 11, 0.7);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 10px;
+            margin: 0 auto 16px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            transform: translateZ(10px);
+        }
+
+        .card h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Frame Viewport Layout */
+        .viewport-panel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        .frame-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+
+        /* Controls Floating HUD Bar */
+        .hud-control-bar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            background: rgba(28, 17, 7, 0.85);
+            border: 1px solid var(--amber-solid);
+            padding: 6px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            z-index: 99999;
+        }
+
+        .hud-btn {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+
+        .hud-btn:hover {
+            background: var(--amber-solid);
+            color: #1c1107;
+            border-color: var(--amber-solid);
+            box-shadow: 0 0 10px var(--amber-glow);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="parallax-wrapper" id="pane">
+        
+        <nav class="navbar">
+            <div class="brand"><span>▲</span> Cone Hub</div>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('home')">հоｍе</button>
+                <button class="tab-btn" onclick="switchTab('proxies')">р𝗋о𝖷іе𐑈</button>
+                <button class="tab-btn" onclick="switchTab('games')">𗗶аｍе𗗶</button>
+                <button class="tab-btn" onclick="switchTab('movies')">ｍо∨іе𗗶</button>
+                <button class="tab-btn" onclick="switchTab('misc')">ｍі𐑈с</button>
+                <button class="tab-btn" onclick="switchTab('apps')">арр𗗶</button>
+                <button class="tab-btn" onclick="switchTab('emulators')">еｍսⅼа𝗍о𝗋𗗶</button>
+                <button class="tab-btn" onclick="switchTab('chat')">сհа𝗍</button>
+                <button class="tab-btn" onclick="switchTab('settings')">с𝗋еԁі𝗍𗗶</button>
+            </div>
+        </nav>
+
+        <div class="content-wrapper">
+            
+            <div id="home" class="panel active">
+                <h3>Welcome to Document Hub</h3>
+                <p class="panel-desc">Select a directory node above to fetch unblocked static assets.</p>
+            </div>
+
+            <div id="proxies" class="panel">
+                <h3>р𝗋о𝖷іе𐑈</h3>
+                <p class="panel-desc">Bypass engines optimized for client-side sandboxing.</p>
+                <div class="card-grid" id="proxy-list"></div>
+            </div>
+
+            <div id="games" class="panel">
+                <h3>𗗶аｍе𗗶</h3>
+                <p class="panel-desc">Static web environments compiled for local execution.</p>
+                <div class="card-grid" id="game-list"></div>
+            </div>
+
+            <div id="movies" class="panel">
+                <h3>ｍо∨іе𗗶</h3>
+                <p class="panel-desc">Type any title to generate a dynamic playimdb.com link node.</p>
+                <div class="search-container">
+                    <input type="text" id="movie-search" class="search-input" placeholder="Enter movie or show name...">
+                    <button class="search-btn" onclick="searchIMDb()">Generate</button>
+                </div>
+                <div class="card-grid" id="movie-list"></div>
+            </div>
+
+            <div id="misc" class="panel">
+                <h3>ｍі𐑈с</h3>
+                <p class="panel-desc">Decentralized network pathways, mirrors, and active deployment mirrors.</p>
+                <div class="card-grid" id="misc-list"></div>
+            </div>
+
+            <div id="apps" class="panel">
+                <h3>арр𗗶</h3>
+                <p class="panel-desc">Web-based applications running completely client-side.</p>
+                <div class="card-grid" id="app-list"></div>
+            </div>
+
+            <div id="emulators" class="panel">
+                <h3>еｍսⅼа𝗍о𝗋𗗶</h3>
+                <p class="panel-desc">Native javascript retro engines running locally.</p>
+                <div class="card-grid" id="emulator-list"></div>
+            </div>
+
+            <div id="chat" class="panel">
+                <h3>сհа𝗍</h3>
+                <p class="panel-desc">Secure peer-to-peer communication networks.</p>
+                <div class="card-grid" id="chat-list"></div>
+            </div>
+
+            <div id="settings" class="panel">
+                <h3>с𝗋еԁі𝗍𗗶</h3>
+                <p class="panel-desc">Cone Hub Core Registry System.</p>
+                <div style="background: var(--glass-card); border: 1px solid rgba(245, 158, 11, 0.2); padding: 25px; border-radius: 12px; max-width: 500px;">
+                    <p style="margin-bottom: 12px;"><strong>UI Architecture:</strong> Cone Hub Engine (Transparent Amber Glass)</p>
+                    <p><strong>Proxy Environment:</strong> Powered by GUST Core Patcher</p>
+                </div>
+            </div>
+
+            <div id="proxy-view" class="panel" style="padding: 0;">
+                <div class="viewport-panel" id="viewport-frame-root">
+                    <div class="hud-control-bar">
+                        <button class="hud-btn" onclick="execFullscreen()">Fullscreen</button>
+                        <button class="hud-btn" onclick="execNewTab()">Open In New Tab</button>
+                        <button class="hud-btn" onclick="execBlob()">Open In Blob</button>
+                        <button class="hud-btn" onclick="execAboutBlank()">Open In About Blank</button>
+                    </div>
+                    <iframe id="runtime-frame" class="frame-container" src="about:blank"></iframe>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Central Active Environment State
+        let currentActiveUrl = "about:blank";
+
+        // Central Database Layout
+        const directoryData = {
+            games: [
+                { name: "Genizy Math", icon: "📐", url: "https://genizymath.github.io/" },
+                { name: "GN Math", icon: "🧪", url: "https://gn-math.dev/" },
+                { name: "Nike Hub", icon: "✔️", url: "https://nikehub.org/a129x" },
+                { name: "Chess.com", icon: "♟️", url: "https://chess.com" },
+                { name: "DuckMath (.org)", icon: "🦆", url: "https://duckmath.org" },
+                { name: "DuckMath (.top)", icon: "🚀", url: "https://duckmath.top" }
+            ],
+            proxies: [
+                { name: "GUST Browser App", icon: "🪐", url: "https://gust-browser.vercel.app/" },
+                { name: "GUST Core Engine", icon: "🔮", url: "https://github.com/nautilus-os/GUST" },
+                { name: "NautilusOS Core", icon: "🐚", url: "https://github.com/nautilus-os/NautilusOS" },
+                { name: "Helios Browser Node", icon: "☀️", url: "https://github.com/nautilus-os/Helios" }
+            ],
+            misc: [
+                { name: "3xpotatoes Chrome VM", icon: "🖥️", url: "https://sites.google.com/view/tripplethepotatoes/unbl0cker/virtual-machines/chrome-browser" },
+                { name: "Griffpatch Projects", icon: "😺", url: "https://scratch.mit.edu/users/griffpatch/" },
+                { name: "Master Edition Discord", icon: "💬", url: "https://sites.google.com/view/master-editionn/discord-chat?authuser=0" },
+                { name: "Clever Dot Portal", icon: "🟢", url: "https://sites.google.com/view/www-clever-com/home" },
+                { name: "Capybara Arcade", icon: "🐹", url: "https://sites.google.com/view/capybaras-arcade" },
+                { name: "Games United Platform", icon: "🤝", url: "https://sites.google.com/view/iktkjytktktk-hdhdhdh/h%C3%B6m3?authuser=0" },
+                { name: "Mod Bot Light Beta", icon: "🤖", url: "https://sites.google.com/view/modbot-light-beta/home" },
+                { name: "Grape World Hub", icon: "🍇", url: "https://sites.google.com/view/grapeworld/home" },
+                { name: "The Game Group Studio", icon: "🎨", url: "https://scratch.mit.edu/studios/35907455" },
+                { name: "Killer Games Sandbox", icon: "⚠️", url: "https://sites.google.com/view/killergames2/never-touch-this-please" },
+                { name: "Domain Expansion Inf", icon: "💥", url: "https://sites.google.com/view/domain-expansion-inf-gxmes/homea" },
+                { name: "Astatine Domain Core", icon: "💎", url: "https://sites.google.com/view/astatine-final-domain-forever" },
+                { name: "Framework HQ Node", icon: "🧱", url: "https://sites.google.com/view/frameworkhqv1/home" },
+                { name: "Vortex Portal", icon: "🌀", url: "https://sites.google.com/view/schoolworksvrandom/vexportal" },
+                { name: "Atlantis Hub System", icon: "🔱", url: "https://sites.google.com/view/atlantis-hub/home" },
+                { name: "Unlocked Joy Site", icon: "🕹️", url: "https://sites.google.com/view/unlockedjoy-site/" },
+                { name: "Progz Prohomework", icon: "📚", url: "https://sites.google.com/view/prohomework2z" },
+                { name: "Math Is Fun Hub", icon: "➕", url: "https://www.mathsisfun.com" },
+                { name: "Interstellar Official", icon: "🚀", url: "https://sites.google.com/view/interstellarofficial" },
+                { name: "Banana Games LOL", icon: "🍌", url: "https://sites.google.com/view/bananagameslol" },
+                { name: "Burrito Edition App", icon: "🌯", url: "https://sites.google.com/view/burritoedition/home" },
+                { name: "Edutain Mirror Node", icon: "📖", url: "https://sites.google.com/view/edutain" },
+                { name: "Bypass Central Matrix", icon: "🛡️", url: "https://sites.google.com/view/bypass-central/home" },
+                { name: "Haha Games (Not a Game)", icon: "🎭", url: "https://sites.google.com/view/hahagames/news-not-a-game" },
+                { name: "Rocxys Math Suite", icon: "📉", url: "https://sites.google.com/view/rocxysmath" },
+                { name: "FreezeNova Unblocked", icon: "❄️", url: "https://sites.google.com/view/freezenova/" },
+                { name: "Study Academics Mirror", icon: "🎓", url: "https://study-academics.global.ssl.fastly.net/games.html" },
+                { name: "Games Vault Web Array", icon: "🗄️", url: "https://sites.google.com/view/gamesvaultweb/" },
+                { name: "That Good Place Node", icon: "🏡", url: "https://sites.google.com/view/that-good-place/home" },
+                { name: "NonUnbanned Games Portal", icon: "🎯", url: "https://sites.google.com/view/nonunbanned-games/home" },
+                { name: "Panicaphla Hub", icon: "🚨", url: "https://sites.google.com/view/panicaphla/home" },
+                { name: "Lobotomy Utilities", icon: "🧠", url: "https://sites.google.com/view/lobotomy-utilities/" },
+                { name: "Dominum Network V2", icon: "🌐", url: "https://sites.google.com/view/dominumnetworkv2/" },
+                { name: "Uncle Fatty Hub", icon: "🍿", url: "https://sites.google.com/view/uncle-fatty/home" },
+                { name: "The Schooler Games", icon: "🎒", url: "https://sites.google.com/view/theschoolergames/games" },
+                { name: "Classroom X Node 1", icon: "❌", url: "https://sites.google.com/view/classroom1234567" },
+                { name: "Classroom X Node 2", icon: "❌", url: "https://sites.google.com/view/classroom626" },
+                { name: "Classroom X Node 3", icon: "❌", url: "https://sites.google.com/view/classroom48" },
+                { name: "Portal G4M3S Target", icon: "👾", url: "https://sites.google.com/view/flpugfs-math-practice-for-kids/entertainment/g4m3s" },
+                { name: "G-Vault System", icon: "🔐", url: "https://sites.google.com/view/g-vault/" },
+                { name: "Gaming Odyssey Core", icon: "🧭", url: "https://sites.google.com/view/gaming-odyssey/home" },
+                { name: "UGWFS GXMX Deploy", icon: "📡", url: "https://sites.google.com/view/gxmx" },
+                { name: "Pulsar Unblocked Matrix", icon: "⚡", url: "https://sites.google.com/view/pulsarunbl0cked/home" },
+                { name: "Chill Kirby Games Array", icon: "🌸", url: "https://sites.google.com/view/fus3-bomb/gm43s" },
+                { name: "Ottumwa Global Engine", icon: "🌍", url: "https://sites.google.com/view/ottumwaschools.com/viewglobal/" },
+                { name: "Ottumwa Sigma Skibidi", icon: "🎵", url: "https://sites.google.com/view/ottumwaschools.com/sigma-l-skibidi-/games" },
+                { name: "New Freeze Nova App", icon: "🌪️", url: "https://dnrweqffuwjtx.cloudfront.net" },
+                { name: "Will Way Engine", icon: "🛣️", url: "https://wilway.today" },
+                { name: "MSN CN Play Framework", icon: "📰", url: "https://www.msn.com/cn-us/play" },
+                { name: "Tuff Fastly Extra Core", icon: "🔥", url: "https://tuff.frectls.fastly.net/extra" },
+                { name: "Secured Web Space Node", icon: "🌌", url: "https://securedweb.on-to.space" },
+                { name: "Google Static Embed API", icon: "⛓️", url: "https://www.gstatic.com/atari/embeds/83a60601c213b72fb19c1855fb0c5f26/intermediate-frame-minified.html?jsh=m%3B%2F_%2Fscs%2Fabc-static%2F_%2Fjs%2Fk%3Dgapi.lb.en.H0R5hnEJFgQ.O%2Fd%3D1%2Frs%3DAHPooo9sMW3biwZqLR-weMcFfAcYoZsLKA%2Fm%3D__features__&r=295116465" },
+                { name: "Crunchyroll Sync Proxy", icon: "🍣", url: "https://piped.video/watch?v=hVHHYf8cF7o" },
+                { name: "The Red Movies Mirror", icon: "🔴", url: "https://sites.google.com/view/the-red-movies/page" },
+                { name: "MovieGrid0 Node", icon: "🏁", url: "https://sites.google.com/view/moviegrid0" },
+                { name: "PetFlix Base Sandbox", icon: "🐾", url: "https://petflix.base44.app/movie/69e6d977417130b93d051c2c" },
+                { name: "AdultSwim Web Stream", icon: "🏊", url: "https://www.youtube.com/@adultswim" },
+                { name: "Entertainment Movies Hub", icon: "🍿", url: "https://sites.google.com/view/djnfjewio-jwmekmcg-get5rju-rww/entertainment/movies" },
+                { name: "Entertainment TV System", icon: "📺", url: "https://sites.google.com/view/djnfjewio-jwmekmcg-get5rju-rww/entertainment/tv" },
+                { name: "Entertainment Anime Sync", icon: "💮", url: "https://sites.google.com/view/djnfjewio-jwmekmcg-get5rju-rww/entertainment/anime" },
+                { name: "Gxming Zone 13 Anime", icon: "🎮", url: "https://sites.google.com/view/gxming-zone-13-/anime" },
+                { name: "GoonMaster Movies App", icon: "👹", url: "https://sites.google.com/view/goonmastermovies/movies" },
+                { name: "Fus3 Bomb Entertainment", icon: "💣", url: "https://sites.google.com/view/fus3-bomb/entertainment/tv-shows" },
+                { name: "AniVerse HD Mirror", icon: "🔮", url: "https://aniversehd.com" },
+                { name: "Plex Watch Free Core", icon: "🎞️", url: "https://www.plex.tv/watch-free/" },
+                { name: "BiliBili Global Endpoint", icon: "⚡", url: "https://www.bilibili.tv/en" },
+                { name: "ReelReviewHub Framework", icon: "📋", url: "https://reelreviewhub.com/en/movie/1450257/" },
+                { name: "FullMoviesAe Portal", icon: "🎥", url: "https://fullmoviesae.com" },
+                { name: "V3 GoStreamEast Link", icon: "🌊", url: "https://v3.gostreameast.link" },
+                { name: "Fus3 Bomb Movie Index", icon: "🍿", url: "https://sites.google.com/view/fus3-bomb/entertainment/movies" },
+                { name: "TV TFlix App Mirror", icon: "📱", url: "https://tv.tflix.app" },
+                { name: "SMovies Live Platform", icon: "🎥", url: "https://smovies.live" },
+                { name: "BeamaFilm Landing Engine", icon: "🎬", url: "https://beamafilm.com/landing-guest" },
+                { name: "Steven Universe Best Index", icon: "⭐", url: "https://stevenuniverse.best" },
+                { name: "ChannelSurfer TV Engine", icon: "🏄", url: "https://channelsurfer.tv/" },
+                { name: "MyRetroTVs Console Hub", icon: "📺", url: "https://myretrotvs.com" },
+                { name: "SourRoll Home Array", icon: "🍥", url: "https://sites.google.com/view/sourroll/home?authuser=0" },
+                { name: "StreamFlix Replit Sandbox", icon: "🚀", url: "https://stream-flix.replit.app" },
+                { name: "Huntley Archives System", icon: "🎞️", url: "https://www.huntleyarchives.com" },
+                { name: "US National Archives Tube", icon: "🏛️", url: "https://www.youtube.com/@USNationalArchives" },
+                { name: "LOC Film/Video Catalog", icon: "📚", url: "https://www.loc.gov/film-and-videos/" },
+                { name: "WikiFlix Toolforge Node", icon: "🌐", url: "https://wikiflix.toolforge.org/#/" },
+                { name: "GoPlay Su Pipeline", icon: "▶️", url: "https://goplay.su" },
+                { name: "DramaCool Fun Mirror", icon: "🎭", url: "https://dramacool-l.fun" },
+                { name: "BstSrs In Proxy", icon: "📡", url: "https://bstsrs.in" },
+                { name: "Miruro Com Indexer", icon: "👁️", url: "https://www.miruro.com" },
+                { name: "Ubu Film Open Resource", icon: "📜", url: "https://ubu.com/film/" },
+                { name: "GizmoPlex MST3K Node", icon: "🤖", url: "https://www.gizmoplex.com/mst3k" }
+            ],
+            apps: [
+                { name: "Discord Web Hook View", icon: "💬", url: "https://discord.com/app" },
+                { name: "VS Code Client", icon: "💻", url: "https://vscode.dev" }
+            ],
+            emulators: [
+                { name: "WebRetro Console", icon: "🕹️", url: "https://webretro.github.io" },
+                { name: "Eclipse Emulator", icon: "🌙", url: "https://eclipseemu.me" }
+            ],
+            chat: [
+                { name: "Matrix MatrixElement", icon: "🔒", url: "https://element.io" }
+            ]
+        };
+
+        // Navigation Controller
+        function switchTab(tabId) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            const targetPanel = document.getElementById(tabId);
+            if (targetPanel) targetPanel.classList.add('active');
+            
+            const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+            if (btn) btn.classList.add('active');
+        }
+
+        // Grid Generator
+        function buildGrid(key, gridId) {
+            const grid = document.getElementById(gridId);
+            if (!grid || !directoryData[key]) return;
+            
+            grid.innerHTML = '';
+            directoryData[key].forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-icon">${item.icon}</div>
+                    <h4>${item.name}</h4>
+                    <p>${item.url}</p>
+                `;
+                card.onclick = () => launchResource(item.url);
+                grid.appendChild(card);
+            });
+        }
+
+        // Dynamic Movie Engine
+        function searchIMDb() {
+            const query = document.getElementById('movie-search').value.trim();
+            if (!query) return;
+
+            const grid = document.getElementById('movie-list');
+            const cleanSlug = query.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            const randomId = Math.random().toString(36).substring(2, 7) + Math.floor(Math.random() * 1000);
+            const generatedUrl = `https://playimdb.com/${randomId}-${cleanSlug}`;
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-icon">🎬</div>
+                <h4>${query}</h4>
+                <p>${generatedUrl}</p>
+            `;
+            card.onclick = () => launchResource(generatedUrl);
+            
+            grid.insertBefore(card, grid.firstChild);
+            document.getElementById('movie-search').value = '';
+        }
+
+        // --- Viewport Execution Routing Framework ---
+        function launchResource(url) {
+            currentActiveUrl = url;
+            const frame = document.getElementById('runtime-frame');
+            frame.src = url;
+            switchTab('proxy-view');
+        }
+
+        // HUD Action: Native HTML5 Window Fullscreen Patcher
+        function execFullscreen() {
+            const element = document.getElementById('runtime-frame');
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.webkitRequestFullscreen) { /* Safari */
+                element.webkitRequestFullscreen();
+            } else if (element.msRequestFullscreen) { /* IE11 */
+                element.msRequestFullscreen();
+            }
+        }
+
+        // HUD Action: Native Document Tab Pipeline Execution
+        function execNewTab() {
+            window.open(currentActiveUrl, '_blank');
+        }
+
+        // HUD Action: Dynamic Binary Large Object (Blob) Injection Framework
+        function execBlob() {
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Google Docs</title>
+                    <style>body,html{margin:0;padding:0;width:100%;height:100%;overflow:hidden}iframe{width:100%;height:100%;border:none}</style>
+                </head>
+                <body>
+                    <iframe src="${currentActiveUrl}"></iframe>
+                </body>
+                </html>
+            `;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+        }
+
+        // HUD Action: Traditional Stealth Tab Cloaker Routing Array
+        function execAboutBlank() {
+            const blankWin = window.open('about:blank', '_blank');
+            if (!blankWin) {
+                alert("Pop-up blocked! Allow pop-ups to mount about:blank viewport layers.");
+                return;
+            }
+            const doc = blankWin.document;
+            doc.title = "Google Docs";
+            
+            // Generate root elements and attach standard container sizing constraints
+            const body = doc.body;
+            body.style.margin = "0";
+            body.style.padding = "0";
+            body.style.width = "100vw";
+            body.style.height = "100vh";
+            body.style.overflow = "hidden";
+            body.style.background = "#000";
+
+            const iframe = doc.createElement('iframe');
+            iframe.src = currentActiveUrl;
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.border = "none";
+            
+            body.appendChild(iframe);
+        }
+
+        // --- Hardware Accelerated 3D Mouse Parallax Engine ---
+        const el = document.getElementById('pane');
+        const intensity = 12;
+
+        window.addEventListener('mousemove', (e) => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const xVal = (e.clientX / width) - 0.5;
+            const yVal = (e.clientY / height) - 0.5;
+            
+            const rotateY = xVal * intensity;
+            const rotateX = -(yVal * intensity);
+
+            el.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        window.addEventListener('mouseleave', () => {
+            el.style.transform = `rotateX(0deg) rotateY(0deg)`;
+        });
+
+        // App Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            buildGrid('games', 'game-list');
+            buildGrid('proxies', 'proxy-list');
+            buildGrid('misc', 'misc-list');
+            buildGrid('apps', 'app-list');
+            buildGrid('emulators', 'emulator-list');
+            buildGrid('chat', 'chat-list');
+            
+            document.getElementById('movie-search').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchIMDb();
+            });
+        });
+    </script>
+</body>
+</html>
